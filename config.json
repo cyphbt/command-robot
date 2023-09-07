@@ -1,9 +1,11 @@
 {
-  "path": ".",
+  "path": "/root/abc/",
   "port": "3000",
   "cmd": "git",
   "args": [
-    "pull"
+    "pull",
+    "origin"
   ],
-  "secret": ""
+  "event": "push",
+  "secret": "your webhook secret"
 }

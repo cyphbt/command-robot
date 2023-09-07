@@ -17,9 +17,12 @@ func ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func hook(w http.ResponseWriter, r *http.Request) {
+	if Config.Event != "" && Config.Event != r.Header.Get("X-GitHub-Event") {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	if Config.Secret != "" {
-		body := make([]byte, 0)
-		_, err := r.Body.Read(body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, "read body error: "+err.Error())
@@ -46,6 +49,7 @@ func hook(w http.ResponseWriter, r *http.Request) {
 	res := string(out)
 	log.Println("out: ", res)
 	io.WriteString(w, res)
+	return
 }
 
 func verifySignature(secret, signature string, payload []byte) bool {
@@ -56,5 +60,6 @@ func verifySignature(secret, signature string, payload []byte) bool {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(payload)
 	expectedSignature := hex.EncodeToString(mac.Sum(nil))
+
 	return hmac.Equal([]byte(expectedSignature), []byte(signature)[7:])
 }

@@ -11,6 +11,7 @@ type config struct {
 	Port   string   `json:"port"`
 	Cmd    string   `json:"cmd"`
 	Args   []string `json:"args"`
+	Event  string   `json:"event"`
 	Secret string   `json:"secret"`
 }
 
