@@ -4,5 +4,6 @@
   "cmd": "git",
   "args": [
     "pull"
-  ]
+  ],
+  "secret": ""
 }

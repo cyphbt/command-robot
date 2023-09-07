@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"log"
 	"net/http"
@@ -14,8 +17,22 @@ func ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func hook(w http.ResponseWriter, r *http.Request) {
-	os.Chdir(Config.Path)
+	if Config.Secret != "" {
+		body := make([]byte, 0)
+		_, err := r.Body.Read(body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, "read body error: "+err.Error())
+			return
+		}
+		defer r.Body.Close()
+		if !verifySignature(Config.Secret, r.Header.Get("X-Hub-Signature-256"), body) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+	}
 
+	os.Chdir(Config.Path)
 	cmd := exec.Command(Config.Cmd, Config.Args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -29,4 +46,15 @@ func hook(w http.ResponseWriter, r *http.Request) {
 	res := string(out)
 	log.Println("out: ", res)
 	io.WriteString(w, res)
+}
+
+func verifySignature(secret, signature string, payload []byte) bool {
+	if len(signature) < 8 {
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(payload)
+	expectedSignature := hex.EncodeToString(mac.Sum(nil))
+	return hmac.Equal([]byte(expectedSignature), []byte(signature)[7:])
 }

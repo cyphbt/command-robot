@@ -7,10 +7,11 @@ import (
 )
 
 type config struct {
-	Path string   `json:"path"`
-	Port string   `json:"port"`
-	Cmd  string   `json:"cmd"`
-	Args []string `json:"args"`
+	Path   string   `json:"path"`
+	Port   string   `json:"port"`
+	Cmd    string   `json:"cmd"`
+	Args   []string `json:"args"`
+	Secret string   `json:"secret"`
 }
 
 var Config = new(config)
